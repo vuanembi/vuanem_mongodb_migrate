@@ -1,3 +1,6 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+
 require('dotenv').config();
 
 const { MongoClient } = require('mongodb');
@@ -20,19 +23,14 @@ const main = async () => {
   for (let i = 0; i < NO_ROWS; i += ROWS_PER_PART) {
     parts.push(i);
   }
-  await Promise.all(
-    parts.map(async (part) => {
-      const rawDocs = await col
-        .find()
-        .limit(ROWS_PER_PART)
-        .skip(part)
-        .toArray();
-      const file = BUCKET.file(
-        `data/venesa/vnphonefull2/vnphonefull.${part}.json`,
-      );
-      await file.save(rawDocs.map(JSON.stringify).join('\n'));
-    }),
-  );
+  for (const part of parts) {
+    const rawDocs = await col.find().limit(ROWS_PER_PART).skip(part).toArray();
+    const file = BUCKET.file(
+      `data/venesa/vnphonefull2/vnphonefull.${part}.json`,
+    );
+    await file.save(rawDocs.map(JSON.stringify).join('\n'));
+    console.log(part);
+  }
   await MONGO_CLIENT.close();
 };
 
